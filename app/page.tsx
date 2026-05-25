@@ -14,8 +14,8 @@ export default function Home() {
   const { user, loading } = UserAuth();
   const router = useRouter();
 
-  // Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // YANGI: Sidebar holati
 
   useEffect(() => {
     if (!loading && !user) {
@@ -35,34 +35,34 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <Sidebar />
+      {/* Sidebar - endi state orqali boshqariladi */}
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      <div className="flex-1 flex flex-col h-screen">
-        <Navbar />
+      <div className="flex-1 flex flex-col h-screen w-full">
+        {/* Navbar - unga menyuni ochish funksiyasini beramiz */}
+        <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
 
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
+        {/* Bu yerda mobilda yon tomonlarga (padding) biroz o'zgartirish kiritdik: p-4 md:p-6 */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
-            {/* Sahifa Sarlavhasi va Qo'shish tugmasi */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <h2 className="text-2xl font-bold text-gray-800">
                 Omborxona Boshqaruvi
               </h2>
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm"
               >
                 <PlusCircle size={20} />
                 Yangi mahsulot
               </button>
             </div>
 
-            {/* Modal shaklidagi forma */}
             <AddProduct
               isOpen={isAddModalOpen}
               onClose={() => setIsAddModalOpen(false)}
             />
 
-            {/* Statistika va Mahsulotlar ro'yxati */}
             <ProductList />
           </div>
         </main>
