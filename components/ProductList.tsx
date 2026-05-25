@@ -22,6 +22,7 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import Fuse from "fuse.js";
+import EditProduct from "./EditProduct";
 
 interface Product {
   id: string;
@@ -39,7 +40,9 @@ export default function ProductList() {
   const { user } = UserAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
@@ -76,6 +79,7 @@ export default function ProductList() {
     };
   }, [products, user]);
 
+  // Fuse.js qidiruv mantig'i
   const fuse = useMemo(
     () =>
       new Fuse(products, {
@@ -169,18 +173,29 @@ export default function ProductList() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm text-gray-700"
         />
+        {searchQuery && (
+          <div className="absolute right-3 top-3 text-sm text-gray-500">
+            Natija:{" "}
+            <span className="font-bold text-gray-800">
+              {filteredProducts.length}
+            </span>{" "}
+            ta
+          </div>
+        )}
       </div>
 
-      {/* 📦 MAHSULOTLAR RO'YXATI (Avvalgi kodingiz kabi qoladi) */}
+      {/* 📦 MAHSULOTLAR RO'YXATI */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredProducts.map((product) => {
           const isOwner = user?.uid === product.ownerUid;
+
           return (
             <div
               key={product.id}
               className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all flex flex-col"
             >
-              <div className="h-48 w-full bg-gray-50 border-b border-gray-100 flex-shrink-0 relative">
+              {/* Mahsulot rasmi */}
+              <div className="h-48 w-full bg-gray-50 border-b border-gray-100 flex-shrink-0 relative group">
                 {product.imageUrl ? (
                   <img
                     src={product.imageUrl}
@@ -196,6 +211,8 @@ export default function ProductList() {
                   </div>
                 )}
               </div>
+
+              {/* Mahsulot ma'lumotlari */}
               <div className="p-5 flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-3">
                   <div>
@@ -207,6 +224,7 @@ export default function ProductList() {
                     </span>
                   </div>
                 </div>
+
                 <div className="flex justify-between items-center mb-4 mt-auto">
                   <div className="text-xl font-black text-gray-900">
                     ${product.price}
@@ -215,6 +233,7 @@ export default function ProductList() {
                     {product.quantity} ta
                   </div>
                 </div>
+
                 <div className="flex items-center justify-between border-t border-gray-100 pt-4">
                   <div
                     className="flex items-center gap-2"
@@ -235,9 +254,13 @@ export default function ProductList() {
                       {product.ownerName.split(" ")[0]}
                     </span>
                   </div>
+
                   {isOwner && (
                     <div className="flex gap-1">
-                      <button className="p-1.5 text-gray-400 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 rounded transition-colors">
+                      <button
+                        onClick={() => setEditingProduct(product)}
+                        className="p-1.5 text-gray-400 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 rounded transition-colors"
+                      >
                         <Edit size={16} />
                       </button>
                       <button
@@ -253,7 +276,29 @@ export default function ProductList() {
             </div>
           );
         })}
+
+        {/* Agar mahsulot topilmasa */}
+        {filteredProducts.length === 0 && searchQuery && (
+          <div className="col-span-full text-center py-12 text-gray-500 bg-white border border-gray-200 rounded-xl shadow-sm">
+            "{searchQuery}" bo'yicha hech narsa topilmadi. Boshqa so'z bilan
+            izlab ko'ring.
+          </div>
+        )}
+
+        {/* Agar umuman mahsulot bo'lmasa */}
+        {filteredProducts.length === 0 && !searchQuery && (
+          <div className="col-span-full text-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+            Omborda hozircha mahsulot yo'q. Birinchi bo'lib qo'shing!
+          </div>
+        )}
       </div>
+
+      {/* ✏️ TAHRIRLASH MODALI */}
+      <EditProduct
+        isOpen={!!editingProduct}
+        onClose={() => setEditingProduct(null)}
+        product={editingProduct}
+      />
     </div>
   );
 }
